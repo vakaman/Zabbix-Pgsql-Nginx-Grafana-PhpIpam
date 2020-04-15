@@ -1,7 +1,7 @@
 # Zabbix | Postgres | Grafana |
 version: "3.7"
 services:
-  zabbix-server: ### ZABBIX --------------------------------------------------------------- ZB SERVER
+  zabbix-server: ### ZABBIX ------------------------------------- ZB SERVER
     container_name: zb-server
     image: zabbix/zabbix-server-pgsql:alpine-latest
     restart: on-failure
@@ -27,7 +27,7 @@ services:
         reservations:
           memory: 512M
 
-  postgres-server: ### ZABBIX ---------------------------------------------------------------- DB --- ZB-SERVER / WEB 
+  postgres-server: ### ZABBIX ----------------------------------- DB --- ZB-SERVER / WEB 
     container_name: pg-zb-server
     image: postgres:latest
     restart: on-failure
@@ -43,7 +43,7 @@ services:
   ################################## FIM ZABBIX SERVER
   ##################################
 
-  zabbix-web: ### ZABBIX --------------------------------------------------------------- WEB
+  zabbix-web: ### ZABBIX ---------------------------------------- WEB
     container_name: zb-web
     image: zabbix/zabbix-web-nginx-pgsql:alpine-latest
     restart: on-failure
@@ -138,5 +138,3 @@ services:
     image: redis
     ports:
       - 6379:6379
-    volumes: 
-      - /var/redis:/usr/local/etc/redis
