@@ -5,7 +5,7 @@ services:
     container_name: zb-server
     hostname: zabbix-server
     image: zabbix/zabbix-server-pgsql:alpine-latest
-    restart: on-failure
+    restart: always
     environment:
       DB_SERVER_HOST: postgres-server
       POSTGRES_USER: zabbix
@@ -15,6 +15,8 @@ services:
       ZBX_DEBUGLEVEL: 1
       ZBX_HOUSEKEEPINGFREQUENCY: 1
       ZBX_MAXHOUSEKEEPERDELETE: 5000
+      ZBX_CACHESIZE: 500M
+      ZBX_CACHEUPDATEFREQUENCY: 60
     depends_on:
       - postgres-server
     links:
@@ -97,7 +99,7 @@ services:
     privileged: true
     restart: unless-stopped
     environment:
-      - ZBX_HOSTNAME=zb-agent
+      - ZBX_HOSTNAME=zabbix-server
       - ZBX_SERVER_HOST=zabbix-server
     deploy:
       resources:
