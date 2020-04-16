@@ -3,6 +3,7 @@ version: "3.7"
 services:
   zabbix-server: ### ZABBIX ------------------------------------- ZB SERVER
     container_name: zb-server
+    hostname: zabbix-server
     image: zabbix/zabbix-server-pgsql:alpine-latest
     restart: on-failure
     environment:
@@ -26,9 +27,14 @@ services:
           memory: 1G
         reservations:
           memory: 512M
+    networks:
+      default:
+            aliases:
+              - zabbix-server  ## Set Alias
 
   postgres-server: ### ZABBIX ----------------------------------- DB --- ZB-SERVER / WEB 
     container_name: pg-zb-server
+    hostname: postgres-server
     image: postgres:latest
     restart: on-failure
     environment:
@@ -38,6 +44,10 @@ services:
       PG_DATA: /var/lib/postgresql/data/pgdata
     volumes: 
       - /var/pg-zb-server:/var/lib/postgresql/data
+    networks:
+      default:
+            aliases:
+              - postgres-server  ## Set Alias
   
   ##################################
   ################################## FIM ZABBIX SERVER
@@ -45,6 +55,7 @@ services:
 
   zabbix-web: ### ZABBIX ---------------------------------------- WEB
     container_name: zb-web
+    hostname: zabbix-web
     image: zabbix/zabbix-web-nginx-pgsql:alpine-latest
     restart: on-failure
     environment:
@@ -70,17 +81,23 @@ services:
           memory: 512M
         reservations:
           memory: 256M
+    networks:
+      default:
+            aliases:
+              - zb-web  ## Set Alias
 
   ##################################
   ################################## FIM ZABBIX WEB
   ##################################
 
-  zabbix-agent: ### ZABBIX - AGENT
+  zb-agent: ### ZABBIX - AGENT
     container_name: zb-agent
+    hostname: zb-agent
     image: zabbix/zabbix-agent:latest
     privileged: true
     restart: unless-stopped
     environment:
+      - ZBX_HOSTNAME=zb-agent
       - ZBX_SERVER_HOST=zabbix-server
     deploy:
       resources:
@@ -90,9 +107,14 @@ services:
           memory: 64M
     links:
       - zabbix-server
+    networks:
+      default:
+            aliases:
+              - zb-agent  ## Set Alias
 
   grafana: ### GRAFANA
     container_name: gf-web
+    hostname: grafana
     image: grafana/grafana
     ports:
       - 3000:3000
@@ -120,9 +142,14 @@ services:
           memory: 512M
         reservations:
           memory: 256M
+    networks:
+      default:
+            aliases:
+              - grafana  ## Set Alias
 
   pg-grafana: ### POSTGRE PARA O GRAFANA
     container_name: pg-grafana
+    hostname: pg-grafana
     image: postgres:latest
     restart: on-failure
     environment:
@@ -132,9 +159,14 @@ services:
       PG_DATA: /var/lib/postgresql/data/pgdata
     volumes: 
       - /var/pg-grafana-data:/var/lib/postgresql/data
+    networks:
+      default:
+            aliases:
+              - pg-grafana  ## Set Alias
 
   redis: ### REDIS -> GRAFANA
     container_name: gf-redis
+    hostname: redis
     image: redis
     ports:
       - 6379:6379
