@@ -125,19 +125,19 @@ services:
     links:
       - pg-grafana ### Linka com o Banco de dados
     environment:
-      GF_SESSION_PROVIDER: "redis"
-      GF_SESSION_PROVIDER_CONFIG: "addr=redis:6379,pool_size=100,db=grafana"
-      GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource,alexanderzobnin-zabbix-app"
-      GF_SECURITY_ADMIN_USER: "admin"
-      GF_SECURITY_ADMIN_PASSWORD: "admin"
-      GF_SERVER_ROOT_URL: "http://grafana.localhost.com.br"
-      GF_SESSION_PROVIDER_CONFIG: "user=grafana password=grafana host=pg-grafana port=5432 dbname=grafana sslmode=disable"
-      GF_DATABASE_HOST: "pg-grafana:5432"
-      GF_DATABASE_NAME: "grafana"
-      GF_DATABASE_USER: "grafana"
-      GF_DATABASE_PASSWORD: "grafana"
-      GF_DATABASE_TYPE: "postgres"
-      GF_SESSION_PROVIDER: "postgres"
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,alexanderzobnin-zabbix-app
+      - GF_SESSION_PROVIDER=redis
+      - GF_SESSION_PROVIDER_CONFIG=addr=redis:6379,pool_size=100,db=grafana
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SERVER_ROOT_URL=http://grafana.localhost.com.br
+      - GF_SESSION_PROVIDER_CONFIG=user=grafana password=grafana host=pg-grafana port=5432 dbname=grafana sslmode=disable=
+      - GF_DATABASE_HOST=pg-grafana:5432
+      - GF_DATABASE_NAME=grafana
+      - GF_DATABASE_USER=grafana
+      - GF_DATABASE_PASSWORD=grafana
+      - GF_DATABASE_TYPE=postgres
+      - GF_SESSION_PROVIDER=postgres
     deploy:
       resources:
         limits:
