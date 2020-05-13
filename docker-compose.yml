@@ -17,6 +17,7 @@ services:
       ZBX_MAXHOUSEKEEPERDELETE: 5000
       ZBX_CACHESIZE: 500M
       ZBX_CACHEUPDATEFREQUENCY: 60
+      ZBX_STARTPINGERS: 5
     depends_on:
       - postgres-server
     links:
@@ -34,7 +35,7 @@ services:
             aliases:
               - zabbix-server  ## Set Alias
 
-  postgres-server: ### ZABBIX ----------------------------------- DB --- ZB-SERVER / WEB 
+  postgres-server: ### ZABBIX ----------------------------------- DB --- ZB-SERVER / WEB
     container_name: pg-zb-server
     hostname: postgres-server
     image: postgres:latest
@@ -44,13 +45,13 @@ services:
       POSTGRES_PASSWORD: zabbix
       POSTGRES_DB: zabbix
       PG_DATA: /var/lib/postgresql/data/pgdata
-    volumes: 
+    volumes:
       - /var/pg-zb-server:/var/lib/postgresql/data
     networks:
       default:
             aliases:
               - postgres-server  ## Set Alias
-  
+
   ##################################
   ################################## FIM ZABBIX SERVER
   ##################################
@@ -125,6 +126,7 @@ services:
     links:
       - pg-grafana ### Linka com o Banco de dados
     environment:
+      - GF_INSTALL_IMAGE_RENDERER_PLUGIN=true
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,alexanderzobnin-zabbix-app
       - GF_SESSION_PROVIDER=redis
       - GF_SESSION_PROVIDER_CONFIG=addr=redis:6379,pool_size=100,db=grafana
@@ -159,7 +161,7 @@ services:
       POSTGRES_PASSWORD: grafana
       POSTGRES_DB: grafana
       PG_DATA: /var/lib/postgresql/data/pgdata
-    volumes: 
+    volumes:
       - /var/pg-grafana-data:/var/lib/postgresql/data
     networks:
       default:
