@@ -38,7 +38,7 @@ services:
   postgres-server: ### ZABBIX ----------------------------------- DB --- ZB-SERVER / WEB
     container_name: pg-zb-server
     hostname: postgres-server
-    image: postgres:latest
+    image: postgres:12.2-alpine
     restart: on-failure
     environment:
       POSTGRES_USER: zabbix
@@ -59,7 +59,7 @@ services:
   zabbix-web: ### ZABBIX ---------------------------------------- WEB
     container_name: zb-web
     hostname: zabbix-web
-    image: zabbix/zabbix-web-nginx-pgsql:alpine-latest
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-5.0-latest
     restart: on-failure
     environment:
       DB_SERVER_HOST: postgres-server
@@ -96,7 +96,7 @@ services:
   zb-agent: ### ZABBIX - AGENT
     container_name: zb-agent
     hostname: zb-agent
-    image: zabbix/zabbix-agent:latest
+    image: zabbix/zabbix-agent:alpine-5.0-latest
     privileged: true
     restart: unless-stopped
     environment:
@@ -154,7 +154,7 @@ services:
   pg-grafana: ### POSTGRE PARA O GRAFANA
     container_name: pg-grafana
     hostname: pg-grafana
-    image: postgres:latest
+    image: postgres:12.2-alpine
     restart: on-failure
     environment:
       POSTGRES_USER: grafana
