@@ -26,7 +26,7 @@ services:
       - postgres-server
     volumes:
       - /var/zb-server-alerts:/usr/lib/zabbix/alertscripts
-      - /var/zb-server-mibs:/usr/share/snmp/mibs/
+      - /var/zb-server-mibs:/var/lib/zabbix/mibs
     deploy:
       resources:
         limits:
