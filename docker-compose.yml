@@ -18,12 +18,15 @@ services:
       ZBX_CACHESIZE: 500M
       ZBX_CACHEUPDATEFREQUENCY: 60
       ZBX_STARTPINGERS: 5
+      ZBX_HISTORYCACHESIZE: 64M
+      ZBX_HISTORYINDEXCACHESIZE: 16M
     depends_on:
       - postgres-server
     links:
       - postgres-server
     volumes:
       - /var/zb-server-alerts:/usr/lib/zabbix/alertscripts
+      - /var/zb-server-mibs:/usr/share/snmp/mibs/
     deploy:
       resources:
         limits:
@@ -118,7 +121,7 @@ services:
   grafana: ### GRAFANA
     container_name: gf-web
     hostname: grafana
-    image: grafana/grafana
+    image: grafana/grafana:7.0.3
     ports:
       - 3000:3000
     depends_on:
