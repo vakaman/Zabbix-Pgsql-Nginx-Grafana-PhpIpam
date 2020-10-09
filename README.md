@@ -1,6 +1,6 @@
-## Zabbix-Pgsql-Nginx-Grafana
+## Zabbix-Pgsql-Nginx-Grafana-PhpIpam
 
-Monitoring system with Zabbix and Grafana
+Monitoring system with Zabbix and Grafana and PhpIpam documentation
 
 #### System up
 ```shell script
