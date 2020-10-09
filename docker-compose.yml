@@ -1,4 +1,4 @@
-# Zabbix | Postgres | Grafana |
+# Zabbix | Postgres | Grafana | PhpIPAM
 version: "3.7"
 services:
   zabbix-server: ### ZABBIX ------------------------------------- ZB SERVER
@@ -41,19 +41,27 @@ services:
   postgres-server: ### ZABBIX ----------------------------------- DB --- ZB-SERVER / WEB
     container_name: pg-zb-server
     hostname: postgres-server
-    image: postgres:12.2-alpine
+    image: postgres:12.4-alpine
     restart: on-failure
     environment:
       POSTGRES_USER: zabbix
       POSTGRES_PASSWORD: zabbix
       POSTGRES_DB: zabbix
       PG_DATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - 8097:5432
     volumes:
       - /var/pg-zb-server:/var/lib/postgresql/data
     networks:
       default:
             aliases:
               - postgres-server  ## Set Alias
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
 
   ##################################
   ################################## FIM ZABBIX SERVER
@@ -118,18 +126,19 @@ services:
             aliases:
               - zb-agent  ## Set Alias
 
-  grafana: ### GRAFANA
+  grafana: ### GRAFANA ---------------------------------------- WEB
     container_name: gf-web
     hostname: grafana
-    image: grafana/grafana:7.0.3
+    image: grafana/grafana:7.2.1
     ports:
-      - 3000:3000
+      - 8091:3000
     depends_on:
       - pg-grafana ### Dependente de subir o DB primeiro
     links:
       - pg-grafana ### Linka com o Banco de dados
     environment:
       - GF_INSTALL_IMAGE_RENDERER_PLUGIN=true
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=alexanderzobnin-zabbix-datasource
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,alexanderzobnin-zabbix-app
       - GF_SESSION_PROVIDER=redis
       - GF_SESSION_PROVIDER_CONFIG=addr=redis:6379,pool_size=100,db=grafana
@@ -154,11 +163,13 @@ services:
             aliases:
               - grafana  ## Set Alias
 
-  pg-grafana: ### POSTGRE PARA O GRAFANA
+  pg-grafana: ### POSTGRE PARA O GRAFANA ---------------------------------------- DB GRAFANA-WEB
     container_name: pg-grafana
     hostname: pg-grafana
     image: postgres:12.2-alpine
     restart: on-failure
+    ports:
+    - 8096:5432
     environment:
       POSTGRES_USER: grafana
       POSTGRES_PASSWORD: grafana
@@ -170,6 +181,12 @@ services:
       default:
             aliases:
               - pg-grafana  ## Set Alias
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
 
   redis: ### REDIS -> GRAFANA
     container_name: gf-redis
@@ -177,3 +194,70 @@ services:
     image: redis
     ports:
       - 6379:6379
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+
+  phpipam-web: ### PHPIPAM ---------------------------------------- WEB
+    container_name: phpipam-web
+    hostname: phpipam-web
+    image: phpipam/phpipam-www:1.4x
+    ports:
+      - 8092:80
+    environment:
+      - TZ=America/Sao_Paulo
+      - IPAM_DATABASE_HOST=phpipam-mariadb
+      - IPAM_DATABASE_PASS=secret_mariadb
+      - IPAM_DATABASE_WEBHOST=%
+    restart: unless-stopped
+    volumes:
+      - /var/phpipam-logo:/phpipam/css/images/logo
+      - ./MIGRATE.sql:/phpipam/db/MIGRATE.sql
+    depends_on:
+      - phpipam-mariadb
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  phpipam-mariadb: ### PHPIPAM ---------------------------------------- DB WEB
+    container_name: phpipam-mariadb
+    hostname: phpipam-mariadb
+    image: mariadb:10.5.5
+    ports:
+      - 8095:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: secret_mariadb
+    restart: unless-stopped
+    volumes:
+      - /var/phpipam-db-data:/var/lib/mysql
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  phpipam-cron: ### Cron
+    container_name: phpipam-cron
+    hostname: phpipam-cron
+    image: phpipam/phpipam-cron:latest
+    environment:
+      - TZ=America/Sao_Paulo
+      - IPAM_DATABASE_HOST=phpipam-mariadb
+      - IPAM_DATABASE_PASS=my_secret_phpipam_pass
+      - SCAN_INTERVAL=1h
+    restart: unless-stopped
+    depends_on:
+      - phpipam-mariadb
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
