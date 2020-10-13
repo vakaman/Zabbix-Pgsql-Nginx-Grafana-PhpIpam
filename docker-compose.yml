@@ -1,15 +1,15 @@
 # Zabbix | Postgres | Grafana | PhpIPAM
 version: "3.7"
 services:
-  zabbix-server: ### ZABBIX ------------------------------------- ZB SERVER
+  zb-server: ### ZABBIX ------------------------------------- ZB SERVER
     container_name: zb-server
-    hostname: zabbix-server
+    hostname: zb-server
     image: zabbix/zabbix-server-pgsql:alpine-5.0-latest
     restart: always
     environment:
-      DB_SERVER_HOST: postgres-server
-      POSTGRES_USER: zabbix
-      POSTGRES_PASSWORD: zabbix
+      DB_SERVER_HOST: pg-zb-server
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: zabbix
       ZBX_HISTORYSTORAGETYPES: log,text
       ZBX_DEBUGLEVEL: 1
@@ -21,9 +21,9 @@ services:
       ZBX_HISTORYCACHESIZE: 64M
       ZBX_HISTORYINDEXCACHESIZE: 16M
     depends_on:
-      - postgres-server
+      - pg-zb-server
     links:
-      - postgres-server
+      - pg-zb-server
     volumes:
       - /var/zb-server-alerts:/usr/lib/zabbix/alertscripts
       - /var/zb-server-mibs:/var/lib/zabbix/mibs
@@ -36,26 +36,28 @@ services:
     networks:
       default:
             aliases:
-              - zabbix-server  ## Set Alias
+              - zb-server  ## Set Alias
 
-  postgres-server: ### ZABBIX ----------------------------------- DB --- ZB-SERVER / WEB
+  pg-zb-server: ### ZABBIX ----------------------------------- |DB|> ZB-SERVER|ZB-WEB
     container_name: pg-zb-server
-    hostname: postgres-server
+    hostname: pg-zb-server
     image: postgres:12.4-alpine
     restart: on-failure
     environment:
-      POSTGRES_USER: zabbix
-      POSTGRES_PASSWORD: zabbix
+      TZ: "America/Sao_Paulo"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: zabbix
       PG_DATA: /var/lib/postgresql/data/pgdata
     ports:
       - 8097:5432
     volumes:
       - /var/pg-zb-server:/var/lib/postgresql/data
+      - ./MIGRATE/ZABBIX-DB.gz:/MIGRATE.gz
     networks:
       default:
             aliases:
-              - postgres-server  ## Set Alias
+              - pg-zb-server  ## Set Alias
     deploy:
       resources:
         limits:
@@ -63,30 +65,26 @@ services:
         reservations:
           memory: 512M
 
-  ##################################
-  ################################## FIM ZABBIX SERVER
-  ##################################
-
-  zabbix-web: ### ZABBIX ---------------------------------------- WEB
+  zb-web: ### ZABBIX ---------------------------------------- WEB
     container_name: zb-web
-    hostname: zabbix-web
+    hostname: zb-web
     image: zabbix/zabbix-web-nginx-pgsql:alpine-5.0-latest
     restart: on-failure
     environment:
-      DB_SERVER_HOST: postgres-server
-      POSTGRES_USER: zabbix
-      POSTGRES_PASSWORD: zabbix
+      DB_SERVER_HOST: pg-zb-server
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: zabbix
-      ZBX_SERVER_HOST: zabbix-server
+      ZBX_SERVER_HOST: zb-server
       ZBX_POSTMAXSIZE: 64M
       PHP_TZ: "America/Sao_Paulo"
       ZBX_MAXEXECUTIONTIME: 500
     depends_on:
-      - postgres-server          ### POSTGREE-WEB
-      - zabbix-server            ### ZB-SERVER
+      - zb-server           # ZB server
+      - pg-zb-server        # PG Zabbix
     links:
-      - postgres-server
-      - zabbix-server
+      - pg-zb-server
+      - zb-server
     ports:
       - 8090:8080
     deploy:
@@ -100,19 +98,15 @@ services:
             aliases:
               - zb-web  ## Set Alias
 
-  ##################################
-  ################################## FIM ZABBIX WEB
-  ##################################
-
-  zb-agent: ### ZABBIX - AGENT
+  zb-agent: ### ZABBIX ---------------------------------------- AGENT
     container_name: zb-agent
     hostname: zb-agent
     image: zabbix/zabbix-agent:alpine-5.0-latest
     privileged: true
     restart: unless-stopped
     environment:
-      - ZBX_HOSTNAME=zabbix-server
-      - ZBX_SERVER_HOST=zabbix-server
+      - ZBX_HOSTNAME=zb-server
+      - ZBX_SERVER_HOST=zb-server
     deploy:
       resources:
         limits:
@@ -120,7 +114,7 @@ services:
         reservations:
           memory: 64M
     links:
-      - zabbix-server
+      - zb-server
     networks:
       default:
             aliases:
@@ -133,23 +127,23 @@ services:
     ports:
       - 8091:3000
     depends_on:
-      - pg-grafana ### Dependente de subir o DB primeiro
+      - pg-grafana # Dependente de subir o DB primeiro
     links:
-      - pg-grafana ### Linka com o Banco de dados
+      - pg-grafana # Linka com o Banco de dados
     environment:
       - GF_INSTALL_IMAGE_RENDERER_PLUGIN=true
       - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=alexanderzobnin-zabbix-datasource
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,alexanderzobnin-zabbix-app
       - GF_SESSION_PROVIDER=redis
       - GF_SESSION_PROVIDER_CONFIG=addr=redis:6379,pool_size=100,db=grafana
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_SERVER_ROOT_URL=http://grafana.localhost.com.br
-      - GF_SESSION_PROVIDER_CONFIG=user=grafana password=grafana host=pg-grafana port=5432 dbname=grafana sslmode=disable=
+#      - GF_SESSION_PROVIDER_CONFIG=user=grafana password=grafana host=pg-grafana port=5432 dbname=grafana sslmode=disable=
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+      - GF_SERVER_ROOT_URL=${GF_SERVER_ROOT_URL}
       - GF_DATABASE_HOST=pg-grafana:5432
       - GF_DATABASE_NAME=grafana
-      - GF_DATABASE_USER=grafana
-      - GF_DATABASE_PASSWORD=grafana
+      - GF_DATABASE_USER=${GF_DATABASE_USER}
+      - GF_DATABASE_PASSWORD=${GF_DATABASE_PASSWORD}
       - GF_DATABASE_TYPE=postgres
       - GF_SESSION_PROVIDER=postgres
     deploy:
@@ -171,9 +165,9 @@ services:
     ports:
     - 8096:5432
     environment:
-      POSTGRES_USER: grafana
-      POSTGRES_PASSWORD: grafana
       POSTGRES_DB: grafana
+      POSTGRES_USER: ${GF_DATABASE_USER}
+      POSTGRES_PASSWORD: ${GF_DATABASE_PASSWORD}
       PG_DATA: /var/lib/postgresql/data/pgdata
     volumes:
       - /var/pg-grafana-data:/var/lib/postgresql/data
@@ -210,12 +204,12 @@ services:
     environment:
       - TZ=America/Sao_Paulo
       - IPAM_DATABASE_HOST=phpipam-mariadb
-      - IPAM_DATABASE_PASS=secret_mariadb
+      - IPAM_DATABASE_PASS=${IPAM_DATABASE_PASS}
       - IPAM_DATABASE_WEBHOST=%
     restart: unless-stopped
     volumes:
       - /var/phpipam-logo:/phpipam/css/images/logo
-      - ./MIGRATE.sql:/phpipam/db/MIGRATE.sql
+      - ./MIGRATE/PHPIPAM.gz:/phpipam/db/MIGRATE.gz
     depends_on:
       - phpipam-mariadb
     deploy:
@@ -232,7 +226,7 @@ services:
     ports:
       - 8095:3306
     environment:
-      MYSQL_ROOT_PASSWORD: secret_mariadb
+      MYSQL_ROOT_PASSWORD: ${IPAM_DATABASE_PASS}
     restart: unless-stopped
     volumes:
       - /var/phpipam-db-data:/var/lib/mysql
@@ -250,7 +244,7 @@ services:
     environment:
       - TZ=America/Sao_Paulo
       - IPAM_DATABASE_HOST=phpipam-mariadb
-      - IPAM_DATABASE_PASS=my_secret_phpipam_pass
+      - IPAM_DATABASE_PASS=${IPAM_DATABASE_PASS}
       - SCAN_INTERVAL=1h
     restart: unless-stopped
     depends_on:
