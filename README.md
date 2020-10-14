@@ -4,6 +4,12 @@ Monitoring system with Zabbix, Grafana and PhpIpam documentation
 
 #### System up
 ```shell script
+Rename EXAMPLE.env
+mv EXAMPLE.env .env
+
+Adjust environment variables on .env
+
+Start system
 docker-compose --compatibility up -d
 ```
 
@@ -23,9 +29,10 @@ docker-compose --compatibility up -d
 # Modify File Permissions
 chmod +x ./amaterasu.sh
 
-# If you want to migrate data
-chmod +x ./migrate-databases.sh
+# If you want to migrate data, put the bkp files in MIGRATE folder 
+chmod +x ./migrate-grafana.sh
+chmod +x ./migrate-zabbix.sh
 
-# Clear all
+# Clear all - be careful!
 ./amaterasu.sh
 ```
