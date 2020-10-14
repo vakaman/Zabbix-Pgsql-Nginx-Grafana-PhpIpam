@@ -5,7 +5,7 @@ services:
     container_name: zb-server
     hostname: zb-server
     image: zabbix/zabbix-server-pgsql:alpine-5.0-latest
-    restart: always
+    restart: unless-stopped
     environment:
       DB_SERVER_HOST: pg-zb-server
       POSTGRES_USER: ${POSTGRES_USER}
@@ -42,7 +42,7 @@ services:
     container_name: pg-zb-server
     hostname: pg-zb-server
     image: postgres:12.4-alpine
-    restart: on-failure
+    restart: unless-stopped
     environment:
       TZ: "America/Sao_Paulo"
       POSTGRES_USER: ${POSTGRES_USER}
@@ -69,7 +69,7 @@ services:
     container_name: zb-web
     hostname: zb-web
     image: zabbix/zabbix-web-nginx-pgsql:alpine-5.0-latest
-    restart: on-failure
+    restart: unless-stopped
     environment:
       DB_SERVER_HOST: pg-zb-server
       POSTGRES_USER: ${POSTGRES_USER}
@@ -162,7 +162,7 @@ services:
     container_name: pg-grafana
     hostname: pg-grafana
     image: postgres:12.2-alpine
-    restart: on-failure
+    restart: unless-stopped
     ports:
     - 8096:5432
     environment:
