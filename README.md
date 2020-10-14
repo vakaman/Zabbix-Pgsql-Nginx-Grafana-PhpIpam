@@ -1,6 +1,6 @@
 ## Zabbix-Pgsql-Nginx-Grafana-PhpIpam
 
-Monitoring system with Zabbix and Grafana and PhpIpam documentation
+Monitoring system with Zabbix, Grafana and PhpIpam documentation
 
 #### System up
 ```shell script
@@ -22,6 +22,9 @@ docker-compose --compatibility up -d
 ```shell script
 # Modify File Permissions
 chmod +x ./amaterasu.sh
+
+# If you want to migrate data
+chmod +x ./migrate-databases.sh
 
 # Clear all
 ./amaterasu.sh
