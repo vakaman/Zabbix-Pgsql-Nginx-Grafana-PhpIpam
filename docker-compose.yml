@@ -128,16 +128,12 @@ services:
       - 8091:3000
     depends_on:
       - pg-grafana
-      - gf-redis
     links:
       - pg-grafana
-      - gf-redis
     environment:
       - GF_INSTALL_IMAGE_RENDERER_PLUGIN=true
       - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=alexanderzobnin-zabbix-datasource
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,alexanderzobnin-zabbix-app
-      - GF_SESSION_PROVIDER=redis
-      - GF_SESSION_PROVIDER_CONFIG=addr=gf-redis:6379,pool_size=100,db=grafana
       - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
       - GF_SERVER_ROOT_URL=${GF_SERVER_ROOT_URL}
@@ -182,23 +178,6 @@ services:
           memory: 1G
         reservations:
           memory: 512M
-
-  gf-redis: ### REDIS -> GRAFANA
-    container_name: gf-redis
-    hostname: gf-redis
-    image: redis
-    ports:
-      - 6379:6379
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-        reservations:
-          memory: 64M
-    networks:
-      default:
-        aliases:
-          - gf-redis  ## Set Alias
 
   phpipam-web: ### PHPIPAM ---------------------------------------- WEB
     container_name: phpipam-web
